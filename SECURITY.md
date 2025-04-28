@@ -1,12 +1,12 @@
 ## Security
 
-If you believe you have found a security vulnerability in any LightORM-owned repository, please report it to us as described below.
+If you believe you have found a security vulnerability in any FastORM-owned repository, please report it to us as described below.
 
 ## Reporting a Vulnerability
 
 **Please do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.**
 
-Instead, please send an email to support@lightorm.io.
+Instead, please send an email to support@fastorm.io.
 
 Please include as much of the information listed below as you can to help us better understand and resolve the issue:
 
