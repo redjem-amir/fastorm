@@ -1,9 +1,9 @@
 <div align="center">
   <a href="https://https://github.com/redjem-amir/fastorm">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-light.png">
-        <source  media="(prefers-color-scheme: light)" srcset="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-dark.png">
-        <img height="80" width="auto" alt="fastorm Logo" src="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-dark.png">
+        <source media="(prefers-color-scheme: dark)" srcset="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-dark.png">
+        <source  media="(prefers-color-scheme: light)" srcset="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-light.png">
+        <img height="200" width="auto" alt="fastorm Logo" src="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-light.png">
     </picture>
   </a>
   <br>
