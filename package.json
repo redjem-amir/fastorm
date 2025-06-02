@@ -1,0 +1,31 @@
+{
+  "name": "fastorm",
+  "version": "0.1.0",
+  "description": "A minimal ORM for PostgreSQL, built for NestJS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json"
+  },
+  "keywords": [
+    "orm",
+    "nestjs",
+    "postgres",
+    "typescript"
+  ],
+  "author": "Ton Nom",
+  "license": "MIT",
+  "dependencies": {
+    "pg": "^8.16.0",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "@types/pg": "^8.15.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.4.18"
+  }
+}
