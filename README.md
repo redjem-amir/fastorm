@@ -1,21 +1,21 @@
 <div align="center">
-  <a href="https://https://github.com/redjem-amir/fastorm">
+  <a href="https://https://github.com/redjem-amir/nestjs-fastorm">
     <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-dark.png">
-        <source  media="(prefers-color-scheme: light)" srcset="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-light.png">
-        <img height="200" width="auto" alt="fastorm Logo" src="https://github.com/redjem-amir/fastorm/blob/main/resources/fastorm-logo-colored-light.png">
+        <source media="(prefers-color-scheme: dark)" srcset="https://github.com/redjem-amir/nestjs-fastorm/blob/main/resources/fastorm-logo-colored-dark.png">
+        <source  media="(prefers-color-scheme: light)" srcset="https://github.com/redjem-amir/nestjs-fastorm/blob/main/resources/fastorm-logo-colored-light.png">
+        <img height="300" width="auto" alt="fastorm Logo" src="https://github.com/redjem-amir/nestjs-fastorm/blob/main/resources/fastorm-logo-colored-light.png">
     </picture>
   </a>
   <br>
   <br>
-	<a href="https://github.com/fastorm/fastorm/actions/workflows/test.yml">
-		<img src="https://github.com/fastorm/fastorm/actions/workflows/test.yml/badge.svg?branch=main">
+	<a href="https://github.com/nestjs-fastorm/nestjs-fastorm/actions/workflows/test.yml">
+		<img src="https://github.com/nestjs-fastorm/nestjs-fastorm/actions/workflows/test.yml/badge.svg?branch=main">
 	</a>
-	<a href="https://badge.fury.io/js/fastorm">
-		<img src="https://badge.fury.io/js/fastorm.svg">
+	<a href="https://badge.fury.io/js/nestjs-fastorm">
+		<img src="https://badge.fury.io/js/nestjs-fastorm.svg">
 	</a>
-    <a href='https://coveralls.io/github/fastorm/fastorm?branch=main'>
-        <img src='https://coveralls.io/repos/github/fastorm/fastorm/badge.svg?branch=main' alt='Coverage Status' />
+    <a href='https://github.com/redjem-amir/nestjs-fastorm?branch=main'>
+        <img src='https://github.com/redjem-amir/nestjs-fastorm/nestjs-fastorm/badge.svg?branch=main' alt='Coverage Status' />
     </a>
   <br>
   <br>
