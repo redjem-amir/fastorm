@@ -21,7 +21,7 @@
   <br>
 </div>
 
-fastorm is an [ORM](https://en.wikipedia.org/wiki/Object-relational_mapping)
+nestjs-fastorm is an [ORM](https://en.wikipedia.org/wiki/Object-relational_mapping)
 that can run in NodeJS, Browser, Cordova, PhoneGap, Ionic, React Native, NativeScript, Expo, and Electron platforms
 and can be used with TypeScript and JavaScript (ES2021).
 Its goal is to always support the latest JavaScript features and provide additional features
@@ -29,12 +29,12 @@ that help you to develop any kind of application that uses databases - from
 small applications with a few tables to large-scale enterprise applications
 with multiple databases.
 
-fastorm supports both [Active Record](./docs/active-record-data-mapper.md#what-is-the-active-record-pattern) and [Data Mapper](./docs/active-record-data-mapper.md#what-is-the-data-mapper-pattern) patterns,
+nestjs-fastorm supports both [Active Record](./docs/active-record-data-mapper.md#what-is-the-active-record-pattern) and [Data Mapper](./docs/active-record-data-mapper.md#what-is-the-data-mapper-pattern) patterns,
 unlike all other JavaScript ORMs currently in existence,
 which means you can write high-quality, loosely coupled, scalable,
 maintainable applications in the most productive way.
 
-fastorm is highly influenced by other ORMs, such as [Hibernate](http://hibernate.org/orm/),
+nestjs-fastorm is highly influenced by other ORMs, such as [Hibernate](http://hibernate.org/orm/),
 [Doctrine](http://www.doctrine-project.org/) and [Entity Framework](https://www.asp.net/entity-framework).
 
 ## Features
@@ -78,10 +78,10 @@ fastorm is highly influenced by other ORMs, such as [Hibernate](http://hibernate
 
 And more...
 
-With fastorm your models look like this:
+With nestjs-fastorm your models look like this:
 
 ```typescript
-import { Entity, PrimaryGeneratedColumn, Column } from "fastorm"
+import { Entity, PrimaryGeneratedColumn, Column } from "nestjs-fastorm"
 
 @Entity()
 export class User {
@@ -125,7 +125,7 @@ await userRepository.remove(timber)
 Alternatively, if you prefer to use the `ActiveRecord` implementation, you can use it as well:
 
 ```typescript
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "fastorm"
+import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from "nestjs-fastorm"
 
 @Entity()
 export class User extends BaseEntity {
@@ -273,14 +273,14 @@ You may also need to enable `es6` in the `lib` section of compiler options, or i
 
 ## Quick Start
 
-The quickest way to get started with fastorm is to use its CLI commands to generate a starter project.
-Quick start works only if you are using fastorm in a NodeJS application.
+The quickest way to get started with nestjs-fastorm is to use its CLI commands to generate a starter project.
+Quick start works only if you are using nestjs-fastorm in a NodeJS application.
 If you are using other platforms, proceed to the [step-by-step guide](#step-by-step-guide).
 
 To create a new project using CLI, run the following command:
 
 ```shell
-npx fastorm init --name MyProject --database postgres
+npx nestjs-fastorm init --name MyProject --database postgres
 ```
 
 Where `name` is the name of your project and `database` is the database you'll use.
@@ -303,7 +303,7 @@ MyProject
 └── tsconfig.json         // TypeScript compiler options
 ```
 
-> You can also run `fastorm init` on an existing node project, but be careful - it may override some files you already have.
+> You can also run `nestjs-fastorm init` on an existing node project, but be careful - it may override some files you already have.
 
 The next step is to install new project dependencies:
 
@@ -344,13 +344,13 @@ You can continue to work with this project and integrate other modules you need 
 creating more entities.
 
 > You can generate an ESM project by running
-> `npx fastorm init --name MyProject --database postgres --module esm` command.
+> `npx nestjs-fastorm init --name MyProject --database postgres --module esm` command.
 
 > You can generate an even more advanced project with express installed by running
-> `npx fastorm init --name MyProject --database mysql --express` command.
+> `npx nestjs-fastorm init --name MyProject --database mysql --express` command.
 
 > You can generate a docker-compose file by running
-> `npx fastorm init --name MyProject --database postgres --docker` command.
+> `npx nestjs-fastorm init --name MyProject --database postgres --docker` command.
 
 ## Step-by-Step Guide
 
@@ -358,12 +358,12 @@ What are you expecting from ORM?
 First of all, you are expecting it will create database tables for you
 and find / insert / update / delete your data without the pain of
 having to write lots of hardly maintainable SQL queries.
-This guide will show you how to set up fastorm from scratch and make it do what you are expecting from an ORM.
+This guide will show you how to set up nestjs-fastorm from scratch and make it do what you are expecting from an ORM.
 
 ### Create a model
 
 Working with a database starts with creating tables.
-How do you tell fastorm to create a database table?
+How do you tell nestjs-fastorm to create a database table?
 The answer is - through the models.
 Your models in your app are your database tables.
 
@@ -389,13 +389,13 @@ Not all models, but only those you define as _entities_.
 
 _Entity_ is your model decorated by an `@Entity` decorator.
 A database table will be created for such models.
-You work with entities everywhere in fastorm.
+You work with entities everywhere in nestjs-fastorm.
 You can load/insert/update/remove and perform other operations with them.
 
 Let's make our `Photo` model an entity:
 
 ```typescript
-import { Entity } from "fastorm"
+import { Entity } from "nestjs-fastorm"
 
 @Entity()
 export class Photo {
@@ -418,7 +418,7 @@ To add database columns, you simply need to decorate an entity's properties you 
 with a `@Column` decorator.
 
 ```typescript
-import { Entity, Column } from "fastorm"
+import { Entity, Column } from "nestjs-fastorm"
 
 @Entity()
 export class Photo {
@@ -457,7 +457,7 @@ This is a requirement and you can't avoid it.
 To make a column a primary key, you need to use the `@PrimaryColumn` decorator.
 
 ```typescript
-import { Entity, Column, PrimaryColumn } from "fastorm"
+import { Entity, Column, PrimaryColumn } from "nestjs-fastorm"
 
 @Entity()
 export class Photo {
@@ -487,7 +487,7 @@ Now, let's say you want your id column to be auto-generated (this is known as au
 To do that, you need to change the `@PrimaryColumn` decorator to a `@PrimaryGeneratedColumn` decorator:
 
 ```typescript
-import { Entity, Column, PrimaryGeneratedColumn } from "fastorm"
+import { Entity, Column, PrimaryGeneratedColumn } from "nestjs-fastorm"
 
 @Entity()
 export class Photo {
@@ -519,7 +519,7 @@ We don't want all our columns to be limited varchars or integers.
 Let's setup the correct data types:
 
 ```typescript
-import { Entity, Column, PrimaryGeneratedColumn } from "fastorm"
+import { Entity, Column, PrimaryGeneratedColumn } from "nestjs-fastorm"
 
 @Entity()
 export class Photo {
@@ -555,7 +555,7 @@ Now, when our entity is created, let's create `index.ts` file and set up our `Da
 
 ```typescript
 import "reflect-metadata"
-import { DataSource } from "fastorm"
+import { DataSource } from "nestjs-fastorm"
 import { Photo } from "./entity/Photo"
 
 const AppDataSource = new DataSource({
@@ -758,7 +758,7 @@ import {
     PrimaryGeneratedColumn,
     OneToOne,
     JoinColumn,
-} from "fastorm"
+} from "nestjs-fastorm"
 import { Photo } from "./Photo"
 
 @Entity()
@@ -913,7 +913,7 @@ import {
     OneToOne,
     JoinColumn,
     Relation,
-} from "fastorm"
+} from "nestjs-fastorm"
 import { Photo } from "./Photo"
 
 @Entity()
@@ -933,7 +933,7 @@ import {
     PrimaryGeneratedColumn,
     OneToOne,
     Relation,
-} from "fastorm"
+} from "nestjs-fastorm"
 import { PhotoMetadata } from "./PhotoMetadata"
 
 @Entity()
@@ -1050,7 +1050,7 @@ import {
     PrimaryGeneratedColumn,
     OneToMany,
     JoinColumn,
-} from "fastorm"
+} from "nestjs-fastorm"
 import { Photo } from "./Photo"
 
 @Entity()
@@ -1127,7 +1127,7 @@ import {
     Column,
     ManyToMany,
     JoinTable,
-} from "fastorm"
+} from "nestjs-fastorm"
 
 @Entity()
 export class Album {
@@ -1259,57 +1259,24 @@ Learn more about QueryBuilder [here](./docs/select-query-builder.md).
 
 ## Samples
 
-Take a look at the samples in [sample](https://github.com/fastorm/fastorm/tree/master/sample) for examples of usage.
-
-There are a few repositories that you can clone and start with:
-
--   [Example how to use fastorm with TypeScript](https://github.com/fastorm/typescript-example)
--   [Example how to use fastorm with JavaScript](https://github.com/fastorm/javascript-example)
--   [Example how to use fastorm with JavaScript and Babel](https://github.com/fastorm/babel-example)
--   [Example how to use fastorm with TypeScript and SystemJS in Browser](https://github.com/fastorm/browser-example)
--   [Example how to use fastorm with TypeScript and React in Browser](https://github.com/ItayGarin/fastorm-react-swc)
--   [Example how to use Express and fastorm](https://github.com/fastorm/typescript-express-example)
--   [Example how to use Koa and fastorm](https://github.com/fastorm/typescript-koa-example)
--   [Example how to use fastorm with MongoDB](https://github.com/fastorm/mongo-typescript-example)
--   [Example how to use fastorm in a Cordova/PhoneGap app](https://github.com/fastorm/cordova-example)
--   [Example how to use fastorm with an Ionic app](https://github.com/fastorm/ionic-example)
--   [Example how to use fastorm with React Native](https://github.com/fastorm/react-native-example)
--   [Example how to use fastorm with Nativescript-Vue](https://github.com/fastorm/nativescript-vue-fastorm-sample)
--   [Example how to use fastorm with Nativescript-Angular](https://github.com/betov18x/nativescript-angular-fastorm-example)
--   [Example how to use fastorm with Electron using JavaScript](https://github.com/fastorm/electron-javascript-example)
--   [Example how to use fastorm with Electron using TypeScript](https://github.com/fastorm/electron-typescript-example)
-
-## Extensions
-
-There are several extensions that simplify working with fastorm and integrating it with other modules:
-
--   [fastorm integration](https://github.com/fastorm/fastorm-typedi-extensions) with [TypeDI](https://github.com/pleerock/typedi)
--   [fastorm integration](https://github.com/fastorm/fastorm-routing-controllers-extensions) with [routing-controllers](https://github.com/pleerock/routing-controllers)
--   Models generation from the existing database - [fastorm-model-generator](https://github.com/Kononnable/fastorm-model-generator)
--   Fixtures loader - [fastorm-fixtures-cli](https://github.com/RobinCK/fastorm-fixtures)
--   ER Diagram generator - [fastorm-uml](https://github.com/eugene-manuilov/fastorm-uml/)
--   another ER Diagram generator - [erdia](https://www.npmjs.com/package/erdia/)
--   Create, drop & seed database - [fastorm-extension](https://github.com/tada5hi/fastorm-extension)
--   Automatically update `data-source.ts` after generating migrations/entities - [fastorm-codebase-sync](https://www.npmjs.com/package/fastorm-codebase-sync)
--   Easy manipulation of `relations` objects - [fastorm-relations](https://npmjs.com/package/fastorm-relations)
--   Automatically generate `relations` based on a GraphQL query - [fastorm-relations-graphql](https://npmjs.com/package/fastorm-relations-graphql)
+Take a look at the samples in [sample](https://github.com/redjem-amir/nestjs-fastorm/tree/main/tests) for examples of usage.
 
 ## Contributing
 
-Learn about contribution [here](https://github.com/fastorm/fastorm/blob/master/CONTRIBUTING.md) and how to set up your development environment [here](https://github.com/fastorm/fastorm/blob/master/DEVELOPER.md).
+Learn about contribution [here](https://github.com/redjem-amir/nestjs-fastorm/blob/main/CONTRIBUTING.md) and how to set up your development environment [here](https://github.com/redjem-amir/nestjs-fastorm/blob/main/DEVELOPER.md).
 
 This project exists thanks to all the people who contribute:
 
-<a href="https://github.com/fastorm/fastorm/graphs/contributors"><img src="https://opencollective.com/fastorm/contributors.svg?width=890&showBtn=false" /></a>
+<a href="https://github.com/redjem-amir/nestjs-fastorm/graphs/contributors"><img src="https://opencollective.com/nestjs-fastorm/contributors.svg?width=890&showBtn=false" /></a>
 
 ## Sponsors
 
-Open source is hard and time-consuming. If you want to invest in fastorm's future you can become a sponsor and allow our core team to spend more time on fastorm's improvements and new features. [Become a sponsor](https://opencollective.com/fastorm)
+Open source is hard and time-consuming. If you want to invest in nestjs-fastorm's future you can become a sponsor and allow our core team to spend more time on nestjs-fastorm's improvements and new features. [Become a sponsor](https://opencollective.com/nestjs-fastorm)
 
-<a href="https://opencollective.com/fastorm" target="_blank"><img src="https://opencollective.com/fastorm/tiers/sponsor.svg?width=890"></a>
+<a href="https://opencollective.com/nestjs-fastorm" target="_blank"><img src="https://opencollective.com/nestjs-fastorm/tiers/sponsor.svg?width=890"></a>
 
 ## Gold Sponsors
 
-Become a gold sponsor and get premium technical support from our core contributors. [Become a gold sponsor](https://opencollective.com/fastorm)
+Become a gold sponsor and get premium technical support from our core contributors. [Become a gold sponsor](https://opencollective.com/nestjs-fastorm)
 
-<a href="https://opencollective.com/fastorm" target="_blank"><img src="https://opencollective.com/fastorm/tiers/gold-sponsor.svg?width=890"></a>
+<a href="https://opencollective.com/nestjs-fastorm" target="_blank"><img src="https://opencollective.com/nestjs-fastorm/tiers/gold-sponsor.svg?width=890"></a>
