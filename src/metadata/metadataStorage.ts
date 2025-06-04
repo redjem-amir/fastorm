@@ -7,6 +7,7 @@ export interface ColumnMetadata {
   target: Function;
   propertyName: string;
   primary?: boolean;
+  generated?: boolean;
 }
 
 export class MetadataStorage {
