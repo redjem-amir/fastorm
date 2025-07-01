@@ -1,24 +1,100 @@
+/**
+ * Pattern : Singleton
+ *
+ * Ce composant centralise l'enregistrement et la consultation des métadonnées des entités ORM.
+ * Il implémente le pattern Singleton pour garantir une instance unique partagée à travers
+ * toute l'application.
+ *
+ * Les métadonnées collectées ici (entités, colonnes, clés primaires, colonnes générées, etc.)
+ * sont utilisées par les différentes couches du système : synchronisation, persistance, requêtes.
+ */
+
+/**
+ * Représente les métadonnées associées à une entité.
+ */
 export interface EntityMetadata {
-  target: Function;
-  tableName: string;
+  target: Function;     // Référence au constructeur de la classe (ex: User, Post, etc.)
+  tableName: string;    // Nom logique de la table en base
 }
 
+/**
+ * Représente les métadonnées associées à une colonne d'une entité.
+ */
 export interface ColumnMetadata {
-  target: Function;
-  propertyName: string;
-  primary?: boolean;
-  generated?: boolean;
+  target: Function;     // Référence au constructeur de la classe contenant la colonne
+  propertyName: string; // Nom de la propriété décorée
+  primary?: boolean;    // Indique si la colonne est une clé primaire
+  generated?: boolean;  // Indique si la colonne est auto-générée (ex: SERIAL, AUTO_INCREMENT)
 }
 
 export class MetadataStorage {
-  static entities: EntityMetadata[] = [];
-  static columns: ColumnMetadata[] = [];
+  /**
+   * Instance unique du Singleton.
+   * Accessible via `getInstance()`.
+   */
+  private static instance: MetadataStorage;
 
-  static getEntity(target: Function) {
+  /**
+   * Registre des entités déclarées avec `@Entity`.
+   */
+  private entities: EntityMetadata[] = [];
+
+  /**
+   * Registre des colonnes décorées avec `@Column`, `@PrimaryColumn`, etc.
+   */
+  private columns: ColumnMetadata[] = [];
+
+  /**
+   * Constructeur privé : empêche l'instanciation externe.
+   */
+  private constructor() {}
+
+  /**
+   * Point d'accès global à l'instance unique de `MetadataStorage`.
+   */
+  static getInstance(): MetadataStorage {
+    if (!MetadataStorage.instance) {
+      MetadataStorage.instance = new MetadataStorage();
+    }
+    return MetadataStorage.instance;
+  }
+
+  /**
+   * Enregistre une entité dans le registre.
+   * @param entity Métadonnées de l'entité
+   */
+  addEntity(entity: EntityMetadata) {
+    this.entities.push(entity);
+  }
+
+  /**
+   * Retourne la liste complète des entités enregistrées.
+   */
+  getEntities(): EntityMetadata[] {
+    return this.entities;
+  }
+
+  /**
+   * Recherche les métadonnées d'une entité à partir de sa classe.
+   * @param target Le constructeur de l'entité recherchée
+   */
+  getEntity(target: Function): EntityMetadata | undefined {
     return this.entities.find(e => e.target === target);
   }
 
-  static getColumns(target: Function) {
+  /**
+   * Enregistre une colonne dans le registre.
+   * @param column Métadonnées de la colonne
+   */
+  addColumn(column: ColumnMetadata) {
+    this.columns.push(column);
+  }
+
+  /**
+   * Retourne les colonnes associées à une classe donnée.
+   * @param target Le constructeur de l'entité
+   */
+  getColumns(target: Function): ColumnMetadata[] {
     return this.columns.filter(c => c.target === target);
   }
 }

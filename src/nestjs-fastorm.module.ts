@@ -1,5 +1,4 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
-import { FastOrmService } from './nestjs-fastorm.service';
 import { synchronize } from './orm/synchronize';
 import { initDb, setPoolOptions } from './db/connection';
 import { EntityRegistry } from './metadata/entityRegistry';
@@ -36,8 +35,8 @@ export class FastOrmModule {
 
     return {
       module: FastOrmModule,
-      providers: [FastOrmService],
-      exports: [FastOrmService],
+      providers: [],
+      exports: [],
     };
   }
 
