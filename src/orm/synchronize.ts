@@ -20,6 +20,7 @@ export async function synchronize(): Promise<void> {
   // Parcours de toutes les entités enregistrées
   for (const entity of storage.getEntities()) {
     const columns = storage.getColumns(entity.target);
+    const relations = storage.getRelations(entity.target);
 
     // Avertissement si aucune colonne n’est définie pour l'entité
     if (!columns.length) {
@@ -34,6 +35,15 @@ export async function synchronize(): Promise<void> {
       return `${col.propertyName} ${type} ${isPrimary}`.trim();
     });
 
+    // Gestion des relations OneToOne et ManyToOne
+    for (const rel of relations) {
+      if (rel.relationType === 'ManyToOne' || rel.relationType === 'OneToOne') {
+        const refTable = rel.relatedEntity().name.toLowerCase();
+        columnDefs.push(`${rel.propertyName}_id INTEGER`);
+        columnDefs.push(`FOREIGN KEY (${rel.propertyName}_id) REFERENCES ${refTable}(id)`);
+      }
+    }
+
     const sql = `CREATE TABLE IF NOT EXISTS ${entity.tableName} (${columnDefs.join(', ')});`;
 
     try {
@@ -45,6 +55,43 @@ export async function synchronize(): Promise<void> {
     } catch (err) {
       console.error(`Failed to create table "${entity.tableName}":`, err);
       throw err;
+    }
+  }
+
+  // 🔁 Création des tables de jointure ManyToMany
+  const allRelations = storage['relations'] || [];
+
+  for (const rel of allRelations) {
+    if (rel.relationType === 'ManyToMany') {
+      const entityA = rel.target;
+      const entityB = rel.relatedEntity();
+
+      const entityAName = entityA.name.toLowerCase();
+      const entityBName = entityB.name.toLowerCase();
+
+      // Nom de la table pivot (ex: "user_roles")
+      const joinTable = [entityAName, entityBName].sort().join('_');
+
+      const colA = `${entityAName}_id`;
+      const colB = `${entityBName}_id`;
+
+      const sql = `
+        CREATE TABLE IF NOT EXISTS ${joinTable} (
+          ${colA} INTEGER NOT NULL,
+          ${colB} INTEGER NOT NULL,
+          PRIMARY KEY (${colA}, ${colB}),
+          FOREIGN KEY (${colA}) REFERENCES ${entityAName}(id),
+          FOREIGN KEY (${colB}) REFERENCES ${entityBName}(id)
+        );
+      `;
+
+      try {
+        await pool.query(sql);
+        globalEvents.emit?.('synchronize', joinTable);
+      } catch (err) {
+        console.error(`Failed to create join table "${joinTable}":`, err);
+        throw err;
+      }
     }
   }
 }

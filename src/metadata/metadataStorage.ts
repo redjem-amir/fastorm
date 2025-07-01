@@ -27,6 +27,21 @@ export interface ColumnMetadata {
   generated?: boolean;  // Indique si la colonne est auto-générée (ex: SERIAL, AUTO_INCREMENT)
 }
 
+/**
+ * Type de relation entre entités.
+ */
+export type RelationType = 'OneToOne' | 'OneToMany' | 'ManyToOne' | 'ManyToMany';
+
+/**
+ * Métadonnées associées à une relation entre entités.
+ */
+export interface RelationMetadata {
+  target: Function;              // Classe source contenant la propriété décorée
+  propertyName: string;          // Nom de la propriété relationnelle (ex: "author")
+  relationType: RelationType;    // Type de relation (ManyToOne, etc.)
+  relatedEntity: () => Function; // Fonction retournant la classe cible de la relation
+}
+
 export class MetadataStorage {
   /**
    * Instance unique du Singleton.
@@ -44,10 +59,13 @@ export class MetadataStorage {
    */
   private columns: ColumnMetadata[] = [];
 
+    
+  private relations: RelationMetadata[] = [];
+  
   /**
    * Constructeur privé : empêche l'instanciation externe.
    */
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Point d'accès global à l'instance unique de `MetadataStorage`.
@@ -96,5 +114,21 @@ export class MetadataStorage {
    */
   getColumns(target: Function): ColumnMetadata[] {
     return this.columns.filter(c => c.target === target);
+  }
+
+  /**
+   * Enregistre une relation entre deux entités.
+   * @param relation Métadonnées de la relation à ajouter
+   */
+  addRelation(relation: RelationMetadata) {
+    this.relations.push(relation);
+  }
+
+  /**
+   * Retourne les relations définies pour une entité donnée.
+   * @param target Le constructeur de l'entité
+   */
+  getRelations(target: Function): RelationMetadata[] {
+    return this.relations.filter(r => r.target === target);
   }
 }

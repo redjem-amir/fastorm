@@ -19,6 +19,7 @@ type Criteria<T> = Partial<Record<keyof T, any>>;
 
 export class Repository<T extends object> {
   private table: string;
+  private EntityClass: new () => T;
 
   /**
    * Initialise le repository pour une entité donnée.
@@ -35,6 +36,7 @@ export class Repository<T extends object> {
     }
 
     this.table = entityMeta.tableName;
+    this.EntityClass = EntityClass;
   }
 
   /**
@@ -49,26 +51,40 @@ export class Repository<T extends object> {
   /**
    * Récupère toutes les lignes de la table correspondant à l'entité.
    *
+   * @param withRelations Indique s’il faut charger les relations (ManyToOne uniquement).
    * @returns Tableau d’objets typés représentant les lignes.
    */
-  async findAll(): Promise<T[]> {
+  async findAll(withRelations = false): Promise<T[]> {
     const pool = PoolFactory.getPool();
     const res = await pool.query(`SELECT * FROM ${this.table}`);
-    return res.rows;
+    const rows = res.rows;
+
+    if (withRelations) {
+      return Promise.all(rows.map(row => this.loadRelations(row)));
+    }
+
+    return rows;
   }
 
   /**
    * Récupère une seule ligne correspondant au critère fourni.
    *
    * @param criteria Objet contenant les champs à filtrer (ex: { id: 1 })
+   * @param withRelations Indique s’il faut charger les relations (ManyToOne uniquement).
    * @returns Une instance de l’entité ou `null` si aucune correspondance.
    */
-  async findOne(criteria: Criteria<T>): Promise<T | null> {
+  async findOne(criteria: Criteria<T>, withRelations = false): Promise<T | null> {
     const pool = PoolFactory.getPool();
     const where = this.buildWhere(criteria);
     const sql = `SELECT * FROM ${this.table} WHERE ${where.clause} LIMIT 1`;
     const res = await pool.query(sql, where.values);
-    return res.rows[0] ?? null;
+    const entity = res.rows[0] ?? null;
+
+    if (entity && withRelations) {
+      return this.loadRelations(entity);
+    }
+
+    return entity;
   }
 
   /**
@@ -112,5 +128,29 @@ export class Repository<T extends object> {
     const clause = keys.map((k, i) => `${k} = $${i + 1}`).join(' AND ');
     const values = Object.values(criteria);
     return { clause, values };
+  }
+
+  /**
+   * Charge les relations ManyToOne pour une entité (jointures simples par lookup).
+   *
+   * @param entity Instance partielle retournée par le SELECT
+   * @returns Une instance enrichie avec les relations
+   */
+  private async loadRelations(entity: any): Promise<any> {
+    const storage = MetadataStorage.getInstance();
+    const relations = storage.getRelations(this.EntityClass);
+
+    for (const rel of relations) {
+      if (rel.relationType === 'ManyToOne') {
+        const relatedRepo = new Repository<any>(rel.relatedEntity() as any);
+        const relatedId = entity[`${rel.propertyName}_id`];
+        if (relatedId !== undefined) {
+          const related = await relatedRepo.findOne({ id: relatedId });
+          entity[rel.propertyName] = related;
+        }
+      }
+    }
+
+    return entity;
   }
 }

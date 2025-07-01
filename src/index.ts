@@ -7,6 +7,9 @@ export { Column } from './decorators/column';
 export { PrimaryColumn } from './decorators/primaryColumn';
 export { PrimaryGeneratedColumn } from './decorators/primaryGeneratedColumn';
 
+// Décorateurs Relations
+export { ManyToOne, OneToMany, OneToOne, ManyToMany } from './decorators/relations';
+
 // Fonctions de base
 export { save } from './orm/save';
 export { synchronize } from './orm/synchronize';
@@ -15,5 +18,5 @@ export { synchronize } from './orm/synchronize';
 export { Repository } from './orm/repository';
 export { EntityBuilder } from './orm/userBuilder';
 
-// (optionnel) Events
+// Events
 export { globalEvents } from './metadata/events';
