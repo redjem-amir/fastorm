@@ -10,16 +10,29 @@
 
 import { save } from './save';
 import { PoolFactory } from '../db/connection';           // Pattern : Factory → centralise la gestion du Pool PostgreSQL
-import { MetadataStorage } from '../metadata/metadataStorage'; // Pattern : Singleton → centralise les métadonnées ORM
+import { MetadataStorage, RelationMetadata } from '../metadata/metadataStorage'; // Pattern : Singleton → centralise les métadonnées ORM
 
 /**
  * Type représentant un critère de sélection dynamique pour les méthodes `findOne`, `delete`, `update`.
  */
 type Criteria<T> = Partial<Record<keyof T, any>>;
 
+/**
+ * Options disponibles pour personnaliser les requêtes de lecture (`findAll`, `findOne`)
+ */
+interface FindOptions<T> {
+  select?: (keyof T)[];
+  limit?: number;
+  orderBy?: { [K in keyof T]?: 'ASC' | 'DESC' };
+  relations?: (keyof T)[];
+}
+
 export class Repository<T extends object> {
   private table: string;
   private EntityClass: new () => T;
+  private metadata = MetadataStorage.getInstance();
+  private relations: RelationMetadata[] = [];
+  private static sqlCache = new Map<string, string>();
 
   /**
    * Initialise le repository pour une entité donnée.
@@ -28,8 +41,7 @@ export class Repository<T extends object> {
    * @param EntityClass Le constructeur de l'entité (ex: User)
    */
   constructor(EntityClass: new () => T) {
-    const storage = MetadataStorage.getInstance();
-    const entityMeta = storage.getEntity(EntityClass);
+    const entityMeta = this.metadata.getEntity(EntityClass);
 
     if (!entityMeta) {
       throw new Error(`Entity not registered: ${EntityClass.name}`);
@@ -37,6 +49,7 @@ export class Repository<T extends object> {
 
     this.table = entityMeta.tableName;
     this.EntityClass = EntityClass;
+    this.relations = this.metadata.getRelations(EntityClass);
   }
 
   /**
@@ -51,16 +64,26 @@ export class Repository<T extends object> {
   /**
    * Récupère toutes les lignes de la table correspondant à l'entité.
    *
-   * @param withRelations Indique s’il faut charger les relations (ManyToOne uniquement).
+   * @param options Paramètres optionnels : sélection de colonnes, tri, relations, limite.
    * @returns Tableau d’objets typés représentant les lignes.
    */
-  async findAll(withRelations = false): Promise<T[]> {
+  async findAll(options: FindOptions<T> = {}): Promise<T[]> {
     const pool = PoolFactory.getPool();
-    const res = await pool.query(`SELECT * FROM ${this.table}`);
+
+    const selectClause = this.buildSelectClause(options.select);
+    const limitClause = options.limit ? `LIMIT ${options.limit}` : '';
+    const orderClause = this.buildOrderClause(options.orderBy);
+
+    const cacheKey = `${this.table}-findAll-${selectClause}-${orderClause}-${limitClause}`;
+    const sql = this.getOrCacheSQL(cacheKey, () =>
+      `SELECT ${selectClause} FROM ${this.table} ${orderClause} ${limitClause}`.trim()
+    );
+
+    const res = await pool.query({ name: cacheKey, text: sql });
     const rows = res.rows;
 
-    if (withRelations) {
-      return Promise.all(rows.map(row => this.loadRelations(row)));
+    if (options.relations?.length) {
+      await this.loadRelations(rows, options.relations);
     }
 
     return rows;
@@ -70,18 +93,24 @@ export class Repository<T extends object> {
    * Récupère une seule ligne correspondant au critère fourni.
    *
    * @param criteria Objet contenant les champs à filtrer (ex: { id: 1 })
-   * @param withRelations Indique s’il faut charger les relations (ManyToOne uniquement).
+   * @param options Paramètres supplémentaires : relations, colonnes à charger...
    * @returns Une instance de l’entité ou `null` si aucune correspondance.
    */
-  async findOne(criteria: Criteria<T>, withRelations = false): Promise<T | null> {
+  async findOne(criteria: Criteria<T>, options: FindOptions<T> = {}): Promise<T | null> {
     const pool = PoolFactory.getPool();
     const where = this.buildWhere(criteria);
-    const sql = `SELECT * FROM ${this.table} WHERE ${where.clause} LIMIT 1`;
-    const res = await pool.query(sql, where.values);
+    const selectClause = this.buildSelectClause(options.select);
+
+    const cacheKey = `${this.table}-findOne-${Object.keys(criteria).join(',')}`;
+    const sql = this.getOrCacheSQL(cacheKey, () =>
+      `SELECT ${selectClause} FROM ${this.table} WHERE ${where.clause} LIMIT 1`
+    );
+
+    const res = await pool.query({ name: cacheKey, text: sql, values: where.values });
     const entity = res.rows[0] ?? null;
 
-    if (entity && withRelations) {
-      return this.loadRelations(entity);
+    if (entity && options.relations?.length) {
+      await this.loadRelations([entity], options.relations);
     }
 
     return entity;
@@ -95,8 +124,13 @@ export class Repository<T extends object> {
   async delete(criteria: Criteria<T>): Promise<void> {
     const pool = PoolFactory.getPool();
     const where = this.buildWhere(criteria);
-    const sql = `DELETE FROM ${this.table} WHERE ${where.clause}`;
-    await pool.query(sql, where.values);
+
+    const cacheKey = `${this.table}-delete-${Object.keys(criteria).join(',')}`;
+    const sql = this.getOrCacheSQL(cacheKey, () =>
+      `DELETE FROM ${this.table} WHERE ${where.clause}`
+    );
+
+    await pool.query({ name: cacheKey, text: sql, values: where.values });
   }
 
   /**
@@ -113,8 +147,12 @@ export class Repository<T extends object> {
     const setClause = setKeys.map((k, i) => `${k} = $${i + 1}`).join(', ');
     const setValues = Object.values(updates);
 
-    const sql = `UPDATE ${this.table} SET ${setClause} WHERE ${where.clause}`;
-    await pool.query(sql, [...setValues, ...where.values]);
+    const cacheKey = `${this.table}-update-${setKeys.join(',')}-${Object.keys(criteria).join(',')}`;
+    const sql = this.getOrCacheSQL(cacheKey, () =>
+      `UPDATE ${this.table} SET ${setClause} WHERE ${where.clause}`
+    );
+
+    await pool.query({ name: cacheKey, text: sql, values: [...setValues, ...where.values] });
   }
 
   /**
@@ -131,26 +169,66 @@ export class Repository<T extends object> {
   }
 
   /**
-   * Charge les relations ManyToOne pour une entité (jointures simples par lookup).
-   *
-   * @param entity Instance partielle retournée par le SELECT
-   * @returns Une instance enrichie avec les relations
+   * Construit dynamiquement une clause SELECT (liste de colonnes ou `*`).
    */
-  private async loadRelations(entity: any): Promise<any> {
-    const storage = MetadataStorage.getInstance();
-    const relations = storage.getRelations(this.EntityClass);
+  private buildSelectClause(select?: (keyof T)[]): string {
+    return select?.length ? select.join(', ') : '*';
+  }
 
-    for (const rel of relations) {
-      if (rel.relationType === 'ManyToOne') {
-        const relatedRepo = new Repository<any>(rel.relatedEntity() as any);
-        const relatedId = entity[`${rel.propertyName}_id`];
-        if (relatedId !== undefined) {
-          const related = await relatedRepo.findOne({ id: relatedId });
-          entity[rel.propertyName] = related;
-        }
+  /**
+   * Construit dynamiquement une clause ORDER BY.
+   */
+  private buildOrderClause(orderBy?: { [K in keyof T]?: 'ASC' | 'DESC' }): string {
+    if (!orderBy) return '';
+    const parts = Object.entries(orderBy).map(([k, dir]) => `${k} ${dir}`);
+    return `ORDER BY ${parts.join(', ')}`;
+  }
+
+  /**
+   * Mécanisme de mise en cache local des requêtes SQL générées.
+   *
+   * @param key Clé unique de cache (ex: `user-findAll-*`)
+   * @param builder Fonction qui génère le SQL si non déjà présent
+   */
+  private getOrCacheSQL(key: string, builder: () => string): string {
+    if (!Repository.sqlCache.has(key)) {
+      Repository.sqlCache.set(key, builder());
+    }
+    return Repository.sqlCache.get(key)!;
+  }
+
+  /**
+   * Charge les relations ManyToOne spécifiées pour un tableau d’entités.
+   *
+   * @param rows Résultats SQL partiels (ex: [{ title: '...', author_id: 1 }])
+   * @param relations Noms des propriétés relationnelles à charger (ex: ['author'])
+   */
+  private async loadRelations(rows: any[], relations: (keyof T)[]) {
+    const pool = PoolFactory.getPool();
+
+    for (const rel of this.relations) {
+      const key = rel.propertyName as keyof T;
+      if (!relations.includes(key)) continue;
+
+      const foreignKey = `${rel.propertyName}_id`;
+      const relatedEntity = rel.relatedEntity();
+      const relatedMeta = this.metadata.getEntity(relatedEntity);
+      if (!relatedMeta) continue;
+
+      const relatedRepo = new Repository<any>(relatedEntity as any);
+      const ids = [...new Set(rows.map(row => row[foreignKey]).filter(Boolean))];
+
+      if (!ids.length) continue;
+
+      const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ');
+      const sql = `SELECT * FROM ${relatedMeta.tableName} WHERE id IN (${placeholders})`;
+
+      const res = await pool.query({ text: sql, values: ids });
+      const map = new Map(res.rows.map(row => [row.id, row]));
+
+      for (const row of rows) {
+        row[rel.propertyName] = map.get(row[foreignKey]) ?? null;
       }
     }
-
-    return entity;
   }
 }

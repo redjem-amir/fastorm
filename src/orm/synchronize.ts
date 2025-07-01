@@ -58,7 +58,7 @@ export async function synchronize(): Promise<void> {
     }
   }
 
-  // 🔁 Création des tables de jointure ManyToMany
+  // Création des tables de jointure ManyToMany
   const allRelations = storage['relations'] || [];
 
   for (const rel of allRelations) {
